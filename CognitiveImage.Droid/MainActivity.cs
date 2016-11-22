@@ -45,12 +45,8 @@
             
             this.imageContainer.SetImageBitmap(photo);
             this.textview.Text = "Working...";
-            
-            using (Stream stream = mediaFile.GetStream())
-            {
-                string description = await this.viewModel.GetDescription(stream);
-                this.textview.Text = description;
-            }
+
+            this.textview.Text = await this.viewModel.GetDescription(mediaFile);
         }
     }
 }

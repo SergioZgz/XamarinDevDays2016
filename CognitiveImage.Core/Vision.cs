@@ -13,36 +13,57 @@
 
     public class Vision
     {
+        #region CognitiveServiceKey
+
         private const string VisionKey = "";
+
+        #endregion
 
         public Vision()
         {
             CrossMedia.Current.Initialize();
         }
 
-        public async Task<string> GetDescription(Stream stream)
+        public async Task<string> GetDescription(MediaFile mediaFile)
         {
-            VisionServiceClient visionClient = new VisionServiceClient(VisionKey);
-            VisualFeature[] features = { VisualFeature.Tags, VisualFeature.Categories, VisualFeature.Description };
-            stream.Seek(0, SeekOrigin.Begin);
-            var data = await visionClient.AnalyzeImageAsync(stream, features, null);
+            using (Stream stream = mediaFile.GetStream())
+            {
+                VisionServiceClient visionClient = new VisionServiceClient(VisionKey);
+                VisualFeature[] features = { VisualFeature.Tags, VisualFeature.Categories, VisualFeature.Description };
+                stream.Seek(0, SeekOrigin.Begin);
+                var data = await visionClient.AnalyzeImageAsync(stream, features, null);
 
-            return string.Join(", ", data.Description.Captions.Select(p => p.Text));
+                return string.Join(", ", data.Description.Captions.Select(p => p.Text));    
+            }
         }
 
-        public async Task<MediaFile> TakePhoto()
+        public async Task<MediaFile> TakePhoto(bool pick = false)
         {
-            var file = await CrossMedia.Current.TakePhotoAsync(
-                new StoreCameraMediaOptions
-                {
-                    Directory = "Sample",
-                    Name = "test.jpg",
-                    SaveToAlbum = false,
-                    PhotoSize = PhotoSize.Small,
-                    CompressionQuality = 90,
-                    DefaultCamera = CameraDevice.Front
-                });
-            
+            MediaFile file = null;
+
+            if (pick)
+            {
+                file = await CrossMedia.Current.PickPhotoAsync(
+                    new PickMediaOptions
+                    {
+                        PhotoSize = PhotoSize.Small,
+                        CompressionQuality = 90,
+                    });
+            }
+            else
+            {
+                file = await CrossMedia.Current.TakePhotoAsync(
+                    new StoreCameraMediaOptions
+                    {
+                        Directory = "Sample",
+                        Name = "test.jpg",
+                        SaveToAlbum = false,
+                        PhotoSize = PhotoSize.Small,
+                        CompressionQuality = 90,
+                        DefaultCamera = CameraDevice.Front
+                    });
+            }
+
             return file;
         }
     }
